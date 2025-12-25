@@ -1,0 +1,8 @@
+venv/
+output/*.csv
+output/*.zip
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
