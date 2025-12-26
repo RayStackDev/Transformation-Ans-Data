@@ -1,6 +1,23 @@
 import pdfplumber
-import csv
+import pandas as pd
+import zipfile
 import os
+
+DADOS = {
+    'PROCEDIMENTO': str,
+    'RN (alteração)': str,
+    'VIGÊNCIA': str,
+    'OD': str,
+    'AMB': str,
+    'HCO': str,
+    'HSO': str,
+    'REF': str,
+    'PAC': str,
+    'DUT': 'Int64',
+    'SUBGRUPO': str,
+    'GRUPO': str,
+    'CAPÍTULO': str
+}
 
 
 caminho_pdf = "Anexo/Anexo_I_Rol_2021RN_465.2021_RN654.2025.pdf"
