@@ -28,3 +28,23 @@ def limpar_texto(texto):
     if pd.isna(texto):
         return pd.NA
     return " ". join(str(texto).strip().replace("\n"))
+
+
+def extrair_tabela(pdf_path):
+
+    tabela_extraida = []
+
+    with pdfplumber.open(pdf_path) as pdf:
+        for pagina in pdf.pages:
+
+            tabela_pagina = pagina.extract_tables()
+            
+            if tabela_pagina:
+                for tabela in tabela_pagina:
+
+                    cabecalhos = [limpar_texto(c) for c in tabela[0]]
+                    df = pd.DataFrame(tabela[1:], columns=cabecalhos)
+                    tabela_extraida.append(df)
+
+
+    return tabela_extraida
