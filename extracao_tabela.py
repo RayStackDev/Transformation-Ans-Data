@@ -25,6 +25,7 @@ Mapeamento_legenda = {
 }
 
 def limpar_texto(texto):
+
     if pd.isna(texto):
         return pd.NA
     return " ". join(str(texto).strip().replace("\n"))
@@ -38,7 +39,7 @@ def extrair_tabela(pdf_path):
         for pagina in pdf.pages:
 
             tabela_pagina = pagina.extract_tables()
-            
+
             if tabela_pagina:
                 for tabela in tabela_pagina:
 
@@ -48,3 +49,31 @@ def extrair_tabela(pdf_path):
 
 
     return tabela_extraida
+
+
+def processar_tabelas(lista_tabelas):
+
+    if not lista_tabelas:
+        raise ValueError("Nenhuma tabela foi extraída do PDF.")
+    
+    df_final = pd.concat(lista_tabelas, ignore_index=True)
+
+    df_final = df_final.dropna(how="all")
+
+    for coluna in df_final.columns:
+        df_final[coluna] = df_final[coluna].apply(limpar_texto)
+
+        if coluna in Mapeamento_legenda:
+            df_final[coluna] = df_final[coluna].replace(Mapeamento_legenda)
+
+    for coluna, tipo in DADOS.items():
+        if coluna in df_final.columns:
+            if tipo == "Int64":
+                df_final[coluna] = pd.to_numeric(
+                    df_final[coluna], errors="coerce"
+                ).astype("Int64")
+            else:
+                df_final[coluna] = df_final[coluna].fillna("").astype(tipo)
+
+
+    return df_final.reset_index(drop=True)
