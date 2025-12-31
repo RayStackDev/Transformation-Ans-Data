@@ -19,7 +19,7 @@ DADOS = {
     'CAPÍTULO': str
 }
 
-Mapeamento_legenda = {
+MAPEAMENTO_LEGENDA = {
     'OD': 'Seg. Odontológica',
     'AMB': 'Seg. Ambulatorial'
 }
@@ -28,27 +28,23 @@ def limpar_texto(texto):
 
     if pd.isna(texto):
         return pd.NA
-    return " ". join(str(texto).strip().replace("\n"))
+    return " ".join(str(texto).strip().replace("\n", " ").split())
 
 
 def extrair_tabela(pdf_path):
 
-    tabela_extraida = []
+    linhas = []
 
     with pdfplumber.open(pdf_path) as pdf:
         for pagina in pdf.pages:
+            texto = pagina.extract_text()
 
-            tabela_pagina = pagina.extract_tables()
-
-            if tabela_pagina:
-                for tabela in tabela_pagina:
-
-                    cabecalhos = [limpar_texto(c) for c in tabela[0]]
-                    df = pd.DataFrame(tabela[1:], columns=cabecalhos)
-                    tabela_extraida.append(df)
+            if texto:
+                for linha in texto.split("\n"):
+                    linhas.append(linha)
 
 
-    return tabela_extraida
+    return linhas
 
 
 def processar_tabelas(lista_tabelas):
@@ -63,8 +59,8 @@ def processar_tabelas(lista_tabelas):
     for coluna in df_final.columns:
         df_final[coluna] = df_final[coluna].apply(limpar_texto)
 
-        if coluna in Mapeamento_legenda:
-            df_final[coluna] = df_final[coluna].replace(Mapeamento_legenda)
+        if coluna in MAPEAMENTO_LEGENDA:
+            df_final[coluna] = df_final[coluna].replace(MAPEAMENTO_LEGENDA)
 
     for coluna, tipo in DADOS.items():
         if coluna in df_final.columns:
@@ -81,4 +77,43 @@ def processar_tabelas(lista_tabelas):
 
 def salvar_csv(df, nome_arquivo):
 
-    os.makedirs()
+    os.makedirs("output", exist_ok=True)
+
+    caminho_csv = os.path.join("output", nome_arquivo)
+
+    df.to_csv(
+        caminho_csv,
+        index=False,
+        encoding="utf-8"
+    )
+
+    return caminho_csv
+
+
+def compactar_csv(caminho_csv, nome_zip):
+
+    caminho_zip = os.path.join("output", nome_zip)
+
+    with zipfile.ZipFile(caminho_zip, "w", zipfile.ZIP_DEFLATED) as zipf:
+        zipf.write(caminho_csv, arcname=os.path.basename(caminho_csv))
+
+    
+    return caminho_zip
+
+
+def main():
+    caminho_pdf = "Anexo/Anexo_I_Rol_2021RN_465.2021_RN654.2025.pdf"
+
+    tabelas = extrair_tabela(caminho_pdf)
+    df_final = processar_tabelas(tabelas)
+
+    
+    caminho_csv = salvar_csv(df_final, "rol_procedimentos.csv")
+
+    nome_zip = "Teste_Raymond.zip"
+    compactar_csv(caminho_csv, nome_zip)
+
+    print("Processo finalizado com sucesso :D")
+
+if __name__ == "__main__":
+    main()
