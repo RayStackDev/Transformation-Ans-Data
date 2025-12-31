@@ -77,3 +77,8 @@ def processar_tabelas(lista_tabelas):
 
 
     return df_final.reset_index(drop=True)
+
+
+def salvar_csv(df, nome_arquivo):
+
+    os.makedirs()
