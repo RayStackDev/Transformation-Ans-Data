@@ -46,24 +46,23 @@ def limpar_texto(texto):
     texto = texto.replace("\n", " ")
     texto = " ".join(texto.split())
 
-    
     return texto
 
 
-def extrair_tabela(pdf_path):
+def extrair_tabela(caminho_path):
+    tabelas = []
 
-    linhas = []
-
-    with pdfplumber.open(pdf_path) as pdf:
+    with pdfplumber.open(caminho_path) as pdf:
         for pagina in pdf.pages:
-            texto = pagina.extract_text()
+            tabelas_pagina = pagina.extract_tables()
+            if tabelas_pagina:
+                for tabela in tabelas_pagina:
+                    cabecalhos = [limpar_texto(c) for c in tabela[0]]
+                    dados = tabela[1:]
+                    df = pd.DataFrame(dados, columns=cabecalhos)
+                    tabelas.append(df)
 
-            if texto:
-                for linha in texto.split("\n"):
-                    linhas.append(linha)
-
-
-    return linhas
+    return tabelas
 
 
 def processar_tabelas(lista_tabelas):
