@@ -2,6 +2,9 @@ import pdfplumber
 import pandas as pd
 import zipfile
 import os
+import re
+import unicodedata
+
 
 DADOS = {
     'PROCEDIMENTO': str,
@@ -24,11 +27,27 @@ MAPEAMENTO_LEGENDA = {
     'AMB': 'Seg. Ambulatorial'
 }
 
-def limpar_texto(texto):
 
-    if pd.isna(texto):
-        return pd.NA
-    return " ".join(str(texto).strip().replace("\n", " ").split())
+def corrigir_mojibake(texto: str) -> str:
+    try:
+        return texto.encode('latin1').decode('utf-8')
+    except Exception:
+        return texto
+
+
+def limpar_texto(texto):
+    if texto is None:
+        return ""
+    
+    texto = str(texto)
+    texto = re.sub(r"\(cid:\d+\)", "", texto)
+    texto = corrigir_mojibake(texto)
+    texto = unicodedata.normalize("NFC", texto)
+    texto = texto.replace("\n", " ")
+    texto = " ".join(texto.split())
+
+    
+    return texto
 
 
 def extrair_tabela(pdf_path):
