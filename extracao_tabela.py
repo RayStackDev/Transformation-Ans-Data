@@ -94,7 +94,8 @@ def salvar_csv(df, nome_arquivo):
     df.to_csv(
         caminho_csv,
         index=False,
-        encoding="utf-8"
+        encoding="utf-8-sig",
+        sep=";"
     )
 
     return caminho_csv
