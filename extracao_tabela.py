@@ -65,32 +65,24 @@ def extrair_tabela(caminho_path):
     return tabelas
 
 
-def processar_tabelas(lista_tabelas):
+def organizar_dados(tabelas):
 
-    if not lista_tabelas:
-        raise ValueError("Nenhuma tabela foi extraída do PDF.")
-    
-    df_final = pd.concat(lista_tabelas, ignore_index=True)
+    df = pd.concat(tabelas, ignore_index=True)
+    df= df.dropna(how="all")
 
-    df_final = df_final.dropna(how="all")
-
-    for coluna in df_final.columns:
-        df_final[coluna] = df_final[coluna].apply(limpar_texto)
-
+    for coluna in df.columns:
+        df[coluna] = df[coluna].apply(limpar_texto)
         if coluna in MAPEAMENTO_LEGENDA:
-            df_final[coluna] = df_final[coluna].replace(MAPEAMENTO_LEGENDA)
+            df[coluna] = df[coluna].replace(MAPEAMENTO_LEGENDA)
 
-    for coluna, tipo in DADOS.items():
-        if coluna in df_final.columns:
-            if tipo == "Int64":
-                df_final[coluna] = pd.to_numeric(
-                    df_final[coluna], errors="coerce"
-                ).astype("Int64")
-            else:
-                df_final[coluna] = df_final[coluna].fillna("").astype(tipo)
+    for coluna, tipo in DADOS:
+        if coluna not in df.columns:
+            df[coluna] = ""
 
+    df = df[DADOS]
+    df['DUT'] = pd.to_numeric(df['DUT'], errors='coerce').astype('Int64')
 
-    return df_final.reset_index(drop=True)
+    return df.reset_index(drop=True)
 
 
 def salvar_csv(df, nome_arquivo):
@@ -123,7 +115,7 @@ def main():
     caminho_pdf = "Anexo/Anexo_I_Rol_2021RN_465.2021_RN654.2025.pdf"
 
     tabelas = extrair_tabela(caminho_pdf)
-    df_final = processar_tabelas(tabelas)
+    df_final = organizar_dados(tabelas)
 
     
     caminho_csv = salvar_csv(df_final, "rol_procedimentos.csv")
