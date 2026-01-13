@@ -49,7 +49,7 @@ def limpar_texto(texto):
     return texto
 
 
-def extrair_tabela(caminho_path):
+def extrair_tabelas(caminho_path):
     tabelas = []
 
     with pdfplumber.open(caminho_path) as pdf:
@@ -75,11 +75,11 @@ def organizar_dados(tabelas):
         if coluna in MAPEAMENTO_LEGENDA:
             df[coluna] = df[coluna].replace(MAPEAMENTO_LEGENDA)
 
-    for coluna, tipo in DADOS:
+    for coluna, tipo in DADOS.items():
         if coluna not in df.columns:
             df[coluna] = ""
 
-    df = df[DADOS]
+    df = df[list(DADOS.keys())]
     df['DUT'] = pd.to_numeric(df['DUT'], errors='coerce').astype('Int64')
 
     return df.reset_index(drop=True)
@@ -102,7 +102,6 @@ def salvar_csv(df, nome_arquivo):
 
 
 def compactar_csv(caminho_csv, nome_zip):
-
     caminho_zip = os.path.join("output", nome_zip)
 
     with zipfile.ZipFile(caminho_zip, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -115,7 +114,7 @@ def compactar_csv(caminho_csv, nome_zip):
 def main():
     caminho_pdf = "Anexo/Anexo_I_Rol_2021RN_465.2021_RN654.2025.pdf"
 
-    tabelas = extrair_tabela(caminho_pdf)
+    tabelas = extrair_tabelas(caminho_pdf)
     df_final = organizar_dados(tabelas)
 
     
